@@ -23,7 +23,10 @@
             id="message"
             placeholder="Type your message here..."
           />
-          <button class="px-4 py-2 bg-blue-500 text-white rounded-r-lg">
+          <button
+            class="px-4 py-2 bg-blue-500 text-white rounded-r-lg"
+            onclick="sendMessage()"
+          >
             Send
           </button>
         </div>
@@ -33,6 +36,7 @@
 
   <script>
     const socket = new WebSocket("ws://localhost:8080/ws");
+    const USER_ID = Math.floor(Math.random() * 1000);
     const messages = [];
 
     socket.addEventListener("message", (event) => {
@@ -49,17 +53,22 @@
 
     messageInput.addEventListener("keyup", (event) => {
       if (event.key === "Enter") {
-        const message = {
-          id: messages.length + 1,
-          text: messageInput.value,
-          user: "Matej",
-        };
-        messages.push(message);
-        renderMessages();
-        messageInput.value = "";
-        socket.send(JSON.stringify(message));
+        sendMessage();
       }
     });
+
+    function sendMessage() {
+      const message = {
+        id: USER_ID,
+        text: messageInput.value,
+        user: "Matej",
+      };
+      messages.push(message);
+      renderMessages();
+      messageInput.value = "";
+      socket.send(JSON.stringify(message));
+      messageInput.focus();
+    }
 
     function renderMessages() {
       messagesContainer.innerHTML = "";
