@@ -16,6 +16,10 @@ type Message struct {
 	User string `json:"user"`
 }
 
+type Hub struct {
+	connections []*websocket.Conn
+}
+
 func main() {
 	router := mux.NewRouter()
 	router.Handle("/", http.FileServer(http.Dir("public")))
@@ -32,6 +36,10 @@ func main() {
 		WriteBufferSize: 1024,
 	}
 
+	hub := &Hub{
+		connections: []*websocket.Conn{},
+	}
+
 	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -39,6 +47,8 @@ func main() {
 		}
 
 		defer conn.Close()
+
+		hub.connections = append(hub.connections, conn)
 
 		err = conn.WriteJSON(&Message{
 			Id:   0,

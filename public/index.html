@@ -37,6 +37,7 @@
   <script>
     const socket = new WebSocket("ws://localhost:8080/ws");
     const USER_ID = Math.floor(Math.random() * 1000);
+    const USERNAME = generateUsername();
     const messages = [];
 
     socket.addEventListener("message", (event) => {
@@ -61,7 +62,7 @@
       const message = {
         id: USER_ID,
         text: messageInput.value,
-        user: "Matej",
+        user: USERNAME,
       };
       messages.push(message);
       renderMessages();
@@ -81,5 +82,39 @@
     }
 
     renderMessages();
+
+    function generateUsername() {
+      const names = [
+        "sun",
+        "moon",
+        "star",
+        "earth",
+        "water",
+        "fire",
+        "wind",
+        "ice",
+        "lightning",
+        "rain",
+        "snow",
+        "sun",
+      ];
+      const adjectives = [
+        "bright",
+        "dark",
+        "heavy",
+        "light",
+        "small",
+        "big",
+        "strong",
+        "weak",
+        "fast",
+        "slow",
+        "young",
+        "old",
+      ];
+      return `${names[Math.floor(Math.random() * names.length)]}_${
+        adjectives[Math.floor(Math.random() * adjectives.length)]
+      }_${Math.floor(Math.random() * 1000)}`;
+    }
   </script>
 </html>
