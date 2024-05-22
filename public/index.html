@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Golang Chat Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div class="flex justify-center items-center h-screen">
+      <div
+        class="h-screen w-screen md:w-1/2 p-12 border rounde-lg bg-blue-100 flex flex-col"
+      >
+        <h2 class="text-center font-semibold text-xl">
+          Golang Chat Application
+        </h2>
+
+        <div id="messages" class="flex grow-1 flex-col"></div>
+        <div class="flex justify-center items-center mt-4">
+          <input
+            class="px-4 py-2 border-b border-gray-200 rounded-l-lg w-full"
+            type="text"
+            id="message"
+            placeholder="Type your message here..."
+          />
+          <button class="px-4 py-2 bg-blue-500 text-white rounded-r-lg">
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    const socket = new WebSocket("ws://localhost:8080/ws");
+    const messages = [];
+
+    socket.addEventListener("message", (event) => {
+      const message = JSON.parse(event.data);
+      messages.push(message);
+      const messageElement = document.createElement("div");
+      messageElement.classList.add("p-2", "border-b", "border-gray-200");
+      messageElement.innerHTML = `<p class="font-semibold">${message.user}</p><p>${message.text}</p>`;
+      messagesContainer.appendChild(messageElement);
+    });
+
+    const messageInput = document.getElementById("message");
+    const messagesContainer = document.getElementById("messages");
+
+    messageInput.addEventListener("keyup", (event) => {
+      if (event.key === "Enter") {
+        const message = {
+          id: messages.length + 1,
+          text: messageInput.value,
+          user: "Matej",
+        };
+        messages.push(message);
+        renderMessages();
+        messageInput.value = "";
+        socket.send(JSON.stringify(message));
+      }
+    });
+
+    function renderMessages() {
+      messagesContainer.innerHTML = "";
+      messages.forEach((message) => {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("p-2", "border-b", "border-gray-200");
+        messageElement.innerHTML = `<p class="font-semibold">${message.user}</p><p>${message.text}</p>`;
+        messagesContainer.appendChild(messageElement);
+      });
+    }
+
+    renderMessages();
+  </script>
+</html>
