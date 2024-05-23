@@ -18,6 +18,15 @@ type Message struct {
 
 type Hub struct {
 	connections []*websocket.Conn
+	broadcast   chan Message
+}
+
+func (h *Hub) startHub() {
+	for message := range h.broadcast {
+		for _, conn := range h.connections {
+			conn.WriteJSON(message)
+		}
+	}
 }
 
 func main() {
@@ -38,6 +47,7 @@ func main() {
 
 	hub := &Hub{
 		connections: []*websocket.Conn{},
+		broadcast:   make(chan Message),
 	}
 
 	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -66,9 +76,11 @@ func main() {
 				log.Fatal(err)
 			}
 
-			fmt.Printf("new message: %v\n", message)
+			hub.broadcast <- message
 		}
 	})
+
+	go hub.startHub()
 
 	log.Printf("Server listening on port %s...", server.Addr)
 	log.Fatal(server.ListenAndServe())

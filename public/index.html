@@ -64,8 +64,6 @@
         text: messageInput.value,
         user: USERNAME,
       };
-      messages.push(message);
-      renderMessages();
       messageInput.value = "";
       socket.send(JSON.stringify(message));
       messageInput.focus();
