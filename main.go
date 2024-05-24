@@ -23,23 +23,22 @@ type Hub struct {
 	register    chan *websocket.Conn
 }
 
-func broadcast(hub *Hub, message Message) {
-	for _, conn := range hub.connections {
-		if err := conn.WriteJSON(message); err != nil {
-			fmt.Printf("error writing to connection: %v\n", err)
+func (h *Hub) startHub() {
+	broadcast := func(message Message) {
+		for _, conn := range h.connections {
+			if err := conn.WriteJSON(message); err != nil {
+				fmt.Printf("error writing to connection: %v\n", err)
+			}
 		}
 	}
-}
-
-func (h *Hub) startHub() {
 	for {
 		select {
 		case message := <-h.broadcast:
 			fmt.Printf("broadcasting message: %v\n", message)
-			broadcast(h, message)
+			broadcast(message)
 		case conn := <-h.register:
 			fmt.Println("new connection")
-			broadcast(h, Message{0, "User connected", "Server Info"})
+			broadcast(Message{0, "User connected", "Server Info"})
 			h.connections = append(h.connections, conn)
 		case conn := <-h.unregister:
 			fmt.Println("client disconnected")
@@ -49,7 +48,7 @@ func (h *Hub) startHub() {
 					break
 				}
 			}
-			broadcast(h, Message{0, "User disconnected", "Server Info"})
+			broadcast(Message{0, "User disconnected", "Server Info"})
 		}
 	}
 }
