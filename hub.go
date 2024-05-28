@@ -13,7 +13,7 @@ type Message struct {
 }
 
 type Hub struct {
-	connections []*websocket.Conn
+	connections map[*websocket.Conn]bool
 	broadcast   chan Message
 	unregister  chan *websocket.Conn
 	register    chan *websocket.Conn
@@ -21,7 +21,7 @@ type Hub struct {
 
 func newHub() *Hub {
 	return &Hub{
-		connections: []*websocket.Conn{},
+		connections: make(map[*websocket.Conn]bool),
 		broadcast:   make(chan Message),
 		register:    make(chan *websocket.Conn),
 		unregister:  make(chan *websocket.Conn),
@@ -30,7 +30,7 @@ func newHub() *Hub {
 
 func (h *Hub) startHub() {
 	broadcast := func(message Message) {
-		for _, conn := range h.connections {
+		for conn := range h.connections {
 			if err := conn.WriteJSON(message); err != nil {
 				fmt.Printf("error writing to connection: %v\n", err)
 			}
@@ -44,15 +44,10 @@ func (h *Hub) startHub() {
 		case conn := <-h.register:
 			fmt.Println("new connection")
 			broadcast(Message{0, "User connected", "Server Info"})
-			h.connections = append(h.connections, conn)
+			h.connections[conn] = true
 		case conn := <-h.unregister:
 			fmt.Println("client disconnected")
-			for i, c := range h.connections {
-				if c == conn {
-					h.connections = append(h.connections[:i], h.connections[i+1:]...)
-					break
-				}
-			}
+			delete(h.connections, conn)
 			broadcast(Message{0, "User disconnected", "Server Info"})
 		}
 	}
